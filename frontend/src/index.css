@@ -28,93 +28,47 @@ box-shadow:0 2px 8px rgba(0,0,0,0.1);
 
 
 .links {
-
 display:flex;
 gap:25px;
-
 }
-
-
 .links a:hover {
-
 color:blue;
-
 }
 .hero {
-
 padding:80px 20px;
-
 text-align:center;
-
 background:#1e88e5;
-
 color:white;
-
 }
-
-
 .hero h1 {
-
 font-size:45px;
-
 margin-bottom:20px;
-
 }
-
-
 .hero button {
-
 margin-top:25px;
-
 padding:12px 30px;
-
 border:none;
-
 border-radius:8px;
-
 background:white;
-
 color:#1e88e5;
-
 font-size:18px;
-
 }
 .booking {
-
 background:white;
-
 width:80%;
-
 margin:40px auto;
-
 padding:30px;
-
 border-radius:10px;
-
 box-shadow:0 5px 15px rgba(0,0,0,0.1);
-
 }
-
-
 .booking select {
-
 padding:12px;
-
 margin:10px;
-
 }
-
-
 .booking button {
-
-padding:12px 25px;
-
-background:#1e88e5;
-
-color:white;
-
-border:none;
-
-border-radius:5px;
-
+ padding:12px 25px;
+ background:#1e88e5;
+ color:white;
+ border:none;
+ border-radius:5px;
 }
