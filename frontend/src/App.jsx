@@ -7,7 +7,7 @@ return (
 
 <Home />
 
-)
+);
 
 }
 

@@ -1,21 +1,25 @@
+import Navbar from "../components/Navbar";
+import Hero from "../components/Hero";
+import BookingForm from "../components/BookingForm";
+
+
 function Home(){
+
 
 return (
 
-<div>
+<>
 
-<h1>
-East Africa Travel
-</h1>
+<Navbar />
 
-<p>
-Book your journey between Uganda, Tanzania and Kenya.
-</p>
+<Hero />
 
+<BookingForm />
 
-</div>
+</>
 
-)
+);
+
 
 }
 
