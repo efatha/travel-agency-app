@@ -1,46 +1,81 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, collectionGroup, getDocs } from "firebase/firestore";
 
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import BookingForm from "../components/BookingForm";
 import { db } from "../firebase/firebase";
 
-function Home() {
+function extractCity(data) {
+  const candidateValues = [
+    data?.city,
+    data?.City,
+    data?.cityName,
+    data?.CityName,
+    data?.destination?.city,
+    data?.destination?.City,
+    data?.destination?.name,
+    data?.destination?.destination,
+    data?.location?.city,
+    data?.location?.name,
+    data?.name,
+    data?.title,
+  ];
 
-  const [cities, setCities] = useState([]);
+  for (const value of candidateValues) {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return "";
+}
+
+function Home() {
+  const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
-    async function fetchCities() {
+    async function fetchTrips() {
       try {
-        const snapshot = await getDocs(collection(db, "cities"));
+        const [tripSnapshot, actionSnapshot] = await Promise.all([
+          getDocs(collection(db, "trips")),
+          getDocs(collectionGroup(db, "actions")),
+        ]);
 
-        const cityList = snapshot.docs.map(doc => doc.data().City);
+        const collectedCities = [...tripSnapshot.docs, ...actionSnapshot.docs]
+          .map((doc) => ({
+            id: doc.id,
+            data: doc.data(),
+          }))
+          .map(({ id, data }) => {
+            const city = extractCity(data);
+            if (city) {
+              console.log("Found city from document", id, "=>", city);
+            }
+            return city;
+          })
+          .filter(Boolean);
 
-        setCities(cityList);
+        const uniqueCities = [...new Set(collectedCities)];
 
+        setTrips(uniqueCities);
       } catch (error) {
-        console.error(error);
-
+        console.error("Firestore error:", error);
+        setTrips([]);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchCities();
-
+    fetchTrips();
   }, []);
 
   return (
     <>
       <Navbar />
       <Hero />
-      <BookingForm
-        cities={cities}
-        loading={loading}
-      />
+      <BookingForm cities={trips} loading={loading} />
     </>
   );
 }
