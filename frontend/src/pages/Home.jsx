@@ -1,60 +1,46 @@
 import { useEffect, useState } from "react";
-import { collection, addDoc, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import BookingForm from "../components/BookingForm";
-
 import { db } from "../firebase/firebase";
 
 function Home() {
+
   const [cities, setCities] = useState([]);
-  const [loadingCities, setLoadingCities] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const trackVisit = async () => {
-      try {
-        await addDoc(collection(db, "actions"), {
-          action: "VIEW_HOME",
-          page: "Home",
-          timestamp: serverTimestamp(),
-        });
-      } catch (error) {
-        console.error("Tracking error:", error);
-      }
-    };
 
-    const citiesRef = collection(db, "cities");
-    const unsubscribe = onSnapshot(
-      citiesRef,
-      (snapshot) => {
-        const cityList = snapshot.docs
-          .map((doc) => {
-            const data = doc.data();
-            return data.name || data.city || data.county || data.title || data.destination || doc.id;
-          })
-          .filter(Boolean)
-          .sort((a, b) => a.localeCompare(b));
+    async function fetchCities() {
+      try {
+        const snapshot = await getDocs(collection(db, "cities"));
+
+        const cityList = snapshot.docs.map(doc => doc.data().City);
 
         setCities(cityList);
-        setLoadingCities(false);
-      },
-      (error) => {
-        console.error("Cities fetch error:", error);
-        setLoadingCities(false);
+
+      } catch (error) {
+        console.error(error);
+
+      } finally {
+        setLoading(false);
       }
-    );
+    }
 
-    trackVisit();
+    fetchCities();
 
-    return () => unsubscribe();
   }, []);
 
   return (
     <>
       <Navbar />
       <Hero />
-      <BookingForm cities={cities} loading={loadingCities} />
+      <BookingForm
+        cities={cities}
+        loading={loading}
+      />
     </>
   );
 }

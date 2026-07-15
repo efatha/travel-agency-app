@@ -1,5 +1,5 @@
 function BookingForm({ cities = [], loading = false }) {
-  const availableCities = cities.length > 0 ? cities : ["Dar es Salaam", "Dodoma", "Nairobi", "Kampala"];
+  const availableCities = cities.length > 0 ? cities : ["Dar es Salaam", "Kampala","Nairobi"];
 
   return (
     <div className="booking">
