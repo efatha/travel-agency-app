@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 
 function BookingForm({ cities = [], loading = false }) {
   const availableCities = cities;
+  const navigate = useNavigate();
   const [fromCity, setFromCity] = useState("");
   const [toCity, setToCity] = useState("");
   const [routes, setRoutes] = useState([]);
@@ -99,8 +101,10 @@ function BookingForm({ cities = [], loading = false }) {
           <p>Searching routes...</p>
         ) : routes.length > 0 ? (
           routes.map((route) => (
-            <div key={route.id} style={{ border: "1px solid #ddd", padding: "0.75rem", marginTop: "0.5rem" }}>
-              <h3>{route.from} to {route.to}</h3>
+            <div key={route.id} className="route-card">
+              <h3>
+                {route.from} → {route.to}
+              </h3>
               <p><strong>Company:</strong> {route.company || "N/A"}</p>
               <p><strong>Date:</strong> {route.date || "N/A"}</p>
               <p><strong>Departure:</strong> {route.departureTime || "N/A"}</p>
@@ -108,6 +112,12 @@ function BookingForm({ cities = [], loading = false }) {
               <p><strong>Duration:</strong> {route.duration || "N/A"}</p>
               <p><strong>Available Seats:</strong> {route.availableSeats ?? "N/A"}</p>
               <p><strong>Price:</strong> {route.price ? `${route.currency || ""} ${route.price}`.trim() : "N/A"}</p>
+              <button
+                className="primary-btn"
+                onClick={() => navigate("/booking", { state: { route } })}
+              >
+                Book Now
+              </button>
             </div>
           ))
         ) : (
