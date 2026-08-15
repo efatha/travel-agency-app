@@ -1,0 +1,17 @@
+.git
+.gitignore
+README.md
+.firebase
+firebase-debug.log
+firebase-debug.*.log
+functions
+dataconnect
+docs
+images
+js
+public
+*.md
+.DS_Store
+.env.local
+.env.development
+.env.production
