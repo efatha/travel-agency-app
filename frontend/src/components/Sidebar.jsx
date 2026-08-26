@@ -1,3 +1,5 @@
+import {Link} from "react-router-dom";
+
 function Sidebar() {
   const items = [
     { label: "Dashboard", path: "/dashboard" },
@@ -13,9 +15,9 @@ function Sidebar() {
       <h3>Admin Menu</h3>
       <nav className="sidebar-nav">
         {items.map((item) => (
-          <a key={item.label} href={item.path} className="sidebar-link">
+          <Link key={item.label} href={item.path} className="sidebar-link">
             {item.label}
-          </a>
+          </Link>
         ))}
       </nav>
     </aside>
