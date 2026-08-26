@@ -391,6 +391,8 @@ button {
   background: #0f172a;
   color: white;
   padding: 24px 18px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(20, 184, 166, 0.2), transparent 35% ), #0f172a;
 }
 
 .sidebar h3 {
@@ -403,13 +405,27 @@ button {
 }
 
 .sidebar-link {
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  display: block;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 650;
+  transition:background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
-.sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.16);
+.sidebar-link:hover,
+.sidebar-link:focus-visible {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.11);
+  color: #ffffff;
+  transform: translateX(3px);
+}
+.sidebar-link.active {
+  border-color: rgba(20, 184, 166, 0.35);
+  background: linear-gradient(135deg, rgba(15, 131, 201, 0.85), rgba(20, 184, 166, 0.75));
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(15, 131, 201, 0.2);
 }
 
 .dashboard-main {
