@@ -38,47 +38,148 @@ button {
 }
 
 .hero {
+  position: relative;
+  min-height: 520px;
   padding: 80px 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  color: #ffffff;
   text-align: center;
-  background: #1e88e5;
-  color: white;
+
+  background:
+    radial-gradient(
+      circle at 15% 25%,
+      rgba(20, 184, 166, 0.28),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(249, 115, 91, 0.18),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 50% 100%,
+      rgba(15, 131, 201, 0.45),
+      transparent 45%
+    ),
+    linear-gradient(
+      135deg,
+      #0f172a 0%,
+      #0b3152 50%,
+      #0f83c9 100%
+    );
 }
 
+/* Decorative travel-inspired circles */
+.hero::before {
+  content: "";
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  top: -250px;
+  right: -180px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 70px rgba(255, 255, 255, 0.025),
+    0 0 0 140px rgba(255, 255, 255, 0.02);
+  pointer-events: none;
+}
+/* Soft decorative glow */
+.hero::after {
+  content: "";
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  left: -180px;
+  bottom: -180px;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle,
+      rgba(20, 184, 166, 0.18),
+      transparent 70%
+    );
+  pointer-events: none;
+}
+
+/* Keep existing hero content above decorations */
+.hero > * {
+  position: relative;
+  z-index: 2;
+}
+/* Hero heading */
 .hero h1 {
-  font-size: 45px;
-  margin-bottom: 20px;
+  margin: 0 0 20px;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -2px;
+  color: #ffffff;
 }
-
+/* Hero button */
 .hero button {
   margin-top: 25px;
-  padding: 12px 30px;
+  padding: 14px 32px;
   border: none;
-  border-radius: 8px;
-  background: white;
-  color: #1e88e5;
+  border-radius: 12px;
+  background: #f9735b;
+  color: #ffffff;
   font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    0 10px 25px rgba(249, 115, 91, 0.30);
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
-
-.booking {
-  background: white;
-  width: 80%;
-  margin: 40px auto;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+/* Button hover */
+.hero button:hover {
+  background: #fb654c;
+  transform: translateY(-3px);
+  box-shadow:
+    0 15px 32px rgba(249, 115, 91, 0.40);
 }
-
-.booking select {
-  padding: 12px;
-  margin: 10px;
+/* Button click */
+.hero button:active {
+  transform: translateY(-1px);
 }
-
-.booking button {
-  padding: 12px 25px;
-  background: #1e88e5;
-  color: white;
-  border: none;
-  border-radius: 5px;
+/* Keyboard accessibility */
+.hero button:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.65);
+  outline-offset: 4px;
+}
+/* Responsive hero */
+@media (max-width: 768px) {
+  .hero {
+    min-height: 480px;
+    padding: 60px 20px;
+  }
+  .hero h1 {
+    font-size: clamp(2.3rem, 9vw, 3.5rem);
+  }
+}
+/* Small phones */
+@media (max-width: 375px) {
+  .hero {
+    min-height: 440px;
+    padding: 50px 16px;
+  }
+  .hero h1 {
+    font-size: 2.2rem;
+  }
+  .hero button {
+    width: 100%;
+    max-width: 320px;
+  }
 }
 
 .booking-page {
@@ -332,7 +433,7 @@ button {
 
 .page-shell {
   max-width: 1100px;
-  margin: 0px auto;
+  margin: 20px auto;
   padding: 24px;
 } 
 .page-shell h1 {
