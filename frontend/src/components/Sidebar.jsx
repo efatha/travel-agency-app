@@ -15,7 +15,7 @@ function Sidebar() {
       <h3>Admin Menu</h3>
       <nav className="sidebar-nav">
         {items.map((item) => (
-          <Link key={item.label} href={item.path} className="sidebar-link">
+          <Link key={item.label} to={item.path} className="sidebar-link">
             {item.label}
           </Link>
         ))}
