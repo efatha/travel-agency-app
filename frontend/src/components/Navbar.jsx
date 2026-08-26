@@ -5,10 +5,10 @@ return (
 <nav className="navbar">
   <h2>East Africa Travel</h2>
   <div className="links">
-    <a href="/">Home</a>
-    <a href="/routes">Routes</a>
-    <a href="/bookings">Bookings</a>
-    <a href="/Dashboard">Dashboard</a>
+    <Link to="/">Home</Link>
+    <Link to="/routes">Routes</Link>
+    <Link to="/bookings">Bookings</Link>
+    <Link to="/Dashboard">Dashboard</Link>
   </div>
 </nav>
 );
