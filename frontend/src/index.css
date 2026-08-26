@@ -181,6 +181,118 @@ button {
     max-width: 320px;
   }
 }
+.booking {
+  background: rgba(255, 255, 255, 0.96);
+  width: min(calc(100% - 32px), 1100px);
+  margin: 40px auto;
+  padding: clamp(20px, 4vw, 30px);
+  border-radius: 16px;
+  box-shadow:
+    0 15px 40px rgba(15, 23, 42, 0.12);
+  box-sizing: border-box;
+  /* Prevent content from overflowing */
+  overflow: hidden;
+}
+.booking select {
+  width: min(100%, 300px);
+  padding: 13px 15px;
+  margin: 8px;
+  border: 1px solid #d7dee8;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #172033;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.booking select:focus {
+  outline: none;
+  border-color: #14b8a6;
+  box-shadow:
+    0 0 0 3px rgba(20, 184, 166, 0.12);
+}
+.booking button {
+  padding: 13px 25px;
+  margin: 8px;
+  background:
+    linear-gradient(
+      135deg,
+      #0f83c9,
+      #14b8a6
+    );
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    0 8px 18px rgba(15, 131, 201, 0.20);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.booking button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 24px rgba(15, 131, 201, 0.28);
+}
+.booking button:active {
+  transform: translateY(0);
+}
+.booking button:focus-visible,
+.booking select:focus-visible {
+  outline: 3px solid rgba(20, 184, 166, 0.35);
+  outline-offset: 2px;
+}
+   /* TABLET */
+@media (max-width: 768px) {
+  .booking {
+    width: calc(100% - 32px);
+    padding: 24px 20px;
+    margin: 30px auto;
+  }
+  .booking select,
+  .booking button {
+    margin: 7px;
+  }
+}
+   /* MOBILE */
+@media (max-width: 600px) {
+  .booking {
+    width: calc(100% - 24px);
+    padding: 20px 15px;
+    border-radius: 14px;
+  }
+  .booking select {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    min-height: 48px;
+  }
+  .booking button {
+    display: block;
+    width: 100%;
+    margin: 12px 0 0;
+    min-height: 48px;
+  }
+}
+
+   /* SMALL PHONES — 320px+ */
+@media (max-width: 375px) {
+  .booking {
+    width: calc(100% - 16px);
+
+    padding: 16px 12px;
+  }
+
+  .booking select,
+  .booking button {
+    font-size: 15px;
+  }
+}
 
 .booking-page {
   max-width: 760px;
