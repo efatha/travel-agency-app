@@ -5,9 +5,9 @@ return (
   <h2>East Africa Travel</h2>
   <div className="links">
     <a href="/">Home</a>
-    <a href="/">Routes</a>
-    <a href="/">Bookings</a>
-    <a href="/">Login</a>
+    <a href="/routes">Routes</a>
+    <a href="/bookings">Bookings</a>
+    <a href="/Dashboard">Dashboard</a>
   </div>
 </nav>
 );
