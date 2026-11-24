@@ -27,7 +27,7 @@ function Footer({ variant = "admin" }) {
         </div>
         <div>
           <h3>Travel</h3>
-          <Link to="/booking">Plan a journey</Link>
+          <a href="/#plan">Plan a journey</a>
           <Link to="/dashboard">Staff desk</Link>
         </div>
         <div>

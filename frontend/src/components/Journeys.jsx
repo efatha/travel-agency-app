@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-
 const JOURNEYS = [
   {
     title: "Migration & the Mara",
@@ -36,7 +34,7 @@ function Journeys() {
             <p>{journey.text}</p>
             <div className="journey-foot">
               <strong>{journey.price}</strong>
-              <Link to="/booking">Plan this journey</Link>
+              <a href="#plan">Plan this journey</a>
             </div>
           </article>
         ))}

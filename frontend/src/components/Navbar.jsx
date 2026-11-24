@@ -6,6 +6,18 @@ function Navbar() {
 
   const close = () => setOpen(false);
 
+  const goTo = (event, id) => {
+    event.preventDefault();
+    close();
+    const target = document.getElementById(id);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.replaceState(null, "", `/#${id}`);
+      return;
+    }
+    window.location.assign(`/#${id}`);
+  };
+
   return (
     <header className="site-nav">
       <Link to="/" className="site-brand" onClick={close}>
@@ -27,15 +39,15 @@ function Navbar() {
         <Link to="/" onClick={close}>
           Home
         </Link>
-        <a href="/#destinations" onClick={close}>
+        <a href="/#destinations" onClick={(event) => goTo(event, "destinations")}>
           Destinations
         </a>
-        <a href="/#journeys" onClick={close}>
+        <a href="/#journeys" onClick={(event) => goTo(event, "journeys")}>
           Journeys
         </a>
-        <Link to="/booking" onClick={close}>
+        <a href="/#plan" onClick={(event) => goTo(event, "plan")}>
           Book
-        </Link>
+        </a>
         <Link to="/dashboard" className="site-admin-link" onClick={close}>
           Dashboard
         </Link>

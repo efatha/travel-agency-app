@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-
 const HERO_IMAGE =
   "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=2000&q=80";
 
@@ -18,10 +16,10 @@ function Hero() {
           patience of people who live beside the migration.
         </p>
         <div className="site-hero-actions">
-          <Link className="site-btn site-btn-gold" to="/booking">
+          <a className="site-btn site-btn-gold" href="#plan" onClick={(event) => { event.preventDefault(); document.getElementById("plan")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>
             Plan a journey
-          </Link>
-          <a className="site-btn site-btn-ghost" href="#destinations">
+          </a>
+          <a className="site-btn site-btn-ghost" href="#destinations" onClick={(event) => { event.preventDefault(); document.getElementById("destinations")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>
             Explore routes
           </a>
         </div>

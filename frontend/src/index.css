@@ -190,8 +190,7 @@ button {
   box-shadow:
     0 15px 40px rgba(15, 23, 42, 0.12);
   box-sizing: border-box;
-  /* Prevent content from overflowing */
-  overflow: hidden;
+  overflow: visible;
 }
 .booking select {
   width: min(100%, 300px);
@@ -802,6 +801,11 @@ button {
 
 .site-section {
   padding: 72px 6vw;
+  scroll-margin-top: 88px;
+}
+
+.plan-band {
+  scroll-margin-top: 88px;
 }
 
 .site-section-head {
@@ -955,6 +959,149 @@ button {
   background: #fffdf8;
   border: 1px solid rgba(20, 34, 28, 0.08);
   box-shadow: 0 18px 40px rgba(12, 26, 23, 0.08);
+  overflow: visible;
+}
+
+.city-select {
+  position: relative;
+  width: min(100%, 280px);
+  margin: 8px;
+}
+
+.city-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: #fffdf8;
+  color: #14221c;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 10px 24px rgba(12, 26, 23, 0.12),
+    0 2px 6px rgba(12, 26, 23, 0.06);
+  text-align: left;
+}
+
+.city-select-trigger small,
+.city-select-panel small {
+  display: block;
+  color: #9a7420;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.city-select-trigger strong {
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.city-select-trigger svg {
+  width: 18px;
+  height: 18px;
+  color: #14221c;
+  transition: transform 0.28s ease;
+}
+
+.city-select.is-open {
+  z-index: 30;
+}
+
+.city-select.is-open .city-select-trigger {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 14px 32px rgba(12, 26, 23, 0.16),
+    0 0 0 4px rgba(227, 178, 60, 0.28);
+}
+
+.city-select.is-open .city-select-trigger svg {
+  transform: rotate(180deg);
+}
+
+.city-select-panel {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  padding: 8px;
+  border-radius: 18px;
+  background: rgba(246, 241, 231, 0.72);
+  border: 1px solid rgba(246, 241, 231, 0.45);
+  box-shadow: 0 16px 36px rgba(12, 26, 23, 0.08);
+  backdrop-filter: blur(14px);
+  transform-origin: top center;
+  animation: city-menu-in 0.22s ease;
+}
+
+.city-select-panel[hidden] {
+  display: none;
+}
+
+.city-select-panel button {
+  width: 100%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: #14221c;
+  box-shadow: none;
+  text-align: left;
+}
+
+.city-select-panel button strong {
+  font-weight: 700;
+}
+
+.city-select-panel button:hover,
+.city-select-panel button.is-selected {
+  background: rgba(227, 178, 60, 0.18);
+  transform: none;
+}
+
+.city-select-panel button.is-selected {
+  background: rgba(246, 241, 231, 0.45);
+  color: #f6f1e7;
+}
+
+.city-select-panel button.is-selected small {
+  color: #e3b23c;
+}
+
+.city-select-panel button.is-selected svg {
+  color: #f6f1e7;
+}
+
+.city-select-panel svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.city-select-empty {
+  margin: 0;
+  padding: 12px;
+  color: #3d5248;
+}
+
+@keyframes city-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .site .booking h2,
@@ -983,18 +1130,61 @@ button {
   justify-content: center;
 }
 
-.booking-results {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+.ticket-head {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 16px;
-  margin-top: 16px;
+  margin-top: 22px;
+}
+
+.ticket-head p {
+  margin: 0;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: #1f8a70;
+}
+
+.ticket-clear {
+  border: 0;
+  background: transparent;
+  color: #14221c;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.booking-note {
+  width: 100%;
+  text-align: center;
+  margin: 12px 0 0;
+  color: #3d5248;
+}
+
+.booking-results {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 28px;
+  margin-top: 18px;
+}
+
+@media (max-width: 640px) {
+  .booking-results {
+    gap: 16px;
+  }
+
+  .city-select {
+    width: 100%;
+  }
 }
 
 .booking-results .route-card {
   margin-top: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 0 1 320px;
+  width: min(320px, 100%);
 }
 
 .booking-results .route-card .primary-btn {
@@ -1002,11 +1192,75 @@ button {
   align-self: flex-start;
 }
 
-.site .booking button,
+.site .booking .booking-fields > button,
 .site .route-card .primary-btn {
   background: #1f8a70;
   color: #f6f1e7;
   box-shadow: none;
+}
+
+.site .booking .ticket-clear {
+  background: transparent;
+  color: #14221c;
+  box-shadow: none;
+}
+
+.site .booking .city-select:first-child .city-select-trigger {
+  background: rgba(255, 255, 255, 0.72);
+  color: #14221c;
+  border: 1px solid rgba(20, 34, 28, 0.14);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 12px 28px rgba(12, 26, 23, 0.14),
+    0 0 0 4px rgba(255, 255, 255, 0.28);
+}
+
+.site .booking .city-select:nth-child(2) .city-select-trigger {
+  background: rgba(255, 255, 255, 0.28);
+  color: #14221c;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 12px 28px rgba(12, 26, 23, 0.12),
+    0 0 0 4px rgba(255, 255, 255, 0.16);
+}
+
+.site .booking .city-select.is-open .city-select-trigger {
+  border-color: rgba(227, 178, 60, 0.85);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 16px 34px rgba(12, 26, 23, 0.18),
+    0 0 0 4px rgba(227, 178, 60, 0.22);
+}
+
+.site .booking .city-select-trigger svg,
+.site .booking .city-select-trigger small {
+  color: #14221c;
+}
+
+.site .booking .city-select-panel {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 22px 44px rgba(12, 26, 23, 0.18),
+    0 0 0 4px rgba(255, 255, 255, 0.22);
+}
+
+.site .booking .city-select-panel button {
+  background: transparent;
+  color: #14221c;
+}
+
+.site .booking .city-select-panel button:hover,
+.site .booking .city-select-panel button.is-selected {
+  background: rgba(255, 255, 255, 0.55);
+  color: #14221c;
+}
+
+.site .booking .city-select-panel button.is-selected small,
+.site .booking .city-select-panel button svg {
+  color: #9a7420;
 }
 
 .site .booking select:focus {

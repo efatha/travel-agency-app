@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loadRoutes, loadTrips, searchRoutes as findRoutes } from "../services/trips";
 
@@ -22,13 +22,81 @@ function RouteCard({ route, onBook }) {
   );
 }
 
-function BookingForm({ cities = [], loading = false }) {
-  const availableCities = cities;
+function CitySelect({ label, value, cities, trips, disabled, onChange }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+  const countryOf = (city) => trips.find((trip) => trip.city === city)?.country || "East Africa";
+
+  useEffect(() => {
+    const close = (event) => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  return (
+    <div className={`city-select ${open ? "is-open" : ""}`} ref={rootRef}>
+      <button
+        type="button"
+        className="city-select-trigger"
+        disabled={disabled}
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>
+          <small>Choose</small>
+          <strong>{value || label}</strong>
+        </span>
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M5 7.5 10 12.5 15 7.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+      </button>
+      {open && (
+      <div className="city-select-panel">
+        {cities.length === 0 ? (
+          <p className="city-select-empty">{disabled ? "Loading cities..." : "No cities available"}</p>
+        ) : (
+          cities.map((city) => {
+            const selected = city === value;
+            return (
+              <button
+                key={city}
+                type="button"
+                className={selected ? "is-selected" : ""}
+                onClick={() => {
+                  onChange(city);
+                  setOpen(false);
+                }}
+              >
+                <span>
+                  <strong>{city}</strong>
+                  <small>{countryOf(city)}</small>
+                </span>
+                {selected && (
+                  <svg viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="M4.5 10.5 8 14l7.5-8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                )}
+              </button>
+            );
+          })
+        )}
+      </div>
+      )}
+    </div>
+  );
+}
+
+function BookingForm({ loading = false }) {
   const navigate = useNavigate();
   const [fromCity, setFromCity] = useState("");
   const [toCity, setToCity] = useState("");
   const [routes, setRoutes] = useState([]);
   const [allRoutes, setAllRoutes] = useState([]);
+  const availableCities = [...new Set(
+    allRoutes.flatMap((route) => [route.from, route.to].filter(Boolean))
+  )].sort((a, b) => a.localeCompare(b));
   const [trips, setTrips] = useState([]);
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -91,43 +159,22 @@ function BookingForm({ cities = [], loading = false }) {
       <h2>Find your trip</h2>
       <p className="booking-lead">Departure, destination, then the seats still open.</p>
       <div className="booking-fields">
-      <select
-        disabled={loading || searching}
+      <CitySelect
+        label="Select departure city"
         value={fromCity}
-        onChange={(e) => setFromCity(e.target.value)}
-      >
-        <option value="">Select departure city</option>
-        {loading ? (
-          <option>Loading cities...</option>
-        ) : availableCities.length === 0 ? (
-          <option>No cities available</option>
-        ) : (
-          availableCities.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
-          ))
-        )}
-      </select>
-
-      <select
+        cities={availableCities}
+        trips={trips}
         disabled={loading || searching}
+        onChange={setFromCity}
+      />
+      <CitySelect
+        label="Select destination city"
         value={toCity}
-        onChange={(e) => setToCity(e.target.value)}
-      >
-        <option value="">Select destination city</option>
-        {loading ? (
-          <option>Loading cities...</option>
-        ) : availableCities.length === 0 ? (
-          <option>No cities available</option>
-        ) : (
-          availableCities.map((city) => (
-            <option key={`${city}-return`} value={city}>
-              {city}
-            </option>
-          ))
-        )}
-      </select>
+        cities={availableCities}
+        trips={trips}
+        disabled={loading || searching}
+        onChange={setToCity}
+      />
 
       <button onClick={searchRoutes} disabled={loading || searching}>
         {searching ? "Searching..." : loading ? "Loading..." : "Search"}
@@ -145,22 +192,31 @@ function BookingForm({ cities = [], loading = false }) {
         </div>
       )}
 
+      <div className="ticket-head">
+        <p>{hasSearched ? "Matching tickets" : "All tickets"}</p>
+        {hasSearched && (
+          <button
+            type="button"
+            className="ticket-clear"
+            onClick={() => {
+              setHasSearched(false);
+              setRoutes([]);
+              setMessage("");
+              setFromCity("");
+              setToCity("");
+            }}
+          >
+            Show all
+          </button>
+        )}
+      </div>
+      {message && <p className="booking-note">{message}</p>}
       <div className="booking-results">
         {searching ? (
-          <p>Searching routes...</p>
-        ) : hasSearched && routes.length > 0 ? (
-          routes.map((route) => (
-            <RouteCard key={route.id} route={route} onBook={(selected) => navigate("/booking", { state: { route: selected } })} />
-          ))
-        ) : hasSearched ? (
-          message && <p>{message}</p>
-        ) : allRoutes.length > 0 ? (
-          allRoutes.map((route) => (
-            <RouteCard key={route.id} route={route} onBook={(selected) => navigate("/booking", { state: { route: selected } })} />
-          ))
-        ) : (
-          message && <p>{message}</p>
-        )}
+          <p className="booking-note">Searching routes...</p>
+        ) : (hasSearched ? routes : allRoutes).map((route) => (
+          <RouteCard key={route.id} route={route} onBook={(selected) => navigate("/booking", { state: { route: selected } })} />
+        ))}
       </div>
     </div>
   );
