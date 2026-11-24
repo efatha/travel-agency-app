@@ -48,20 +48,24 @@ function Booking() {
     setSaving(true);
 
     try {
-      await saveBooking({
+      const saved = await saveBooking({
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         email: formData.email,
         seats: formData.seats,
         from: route.from,
         to: route.to,
+        routeId: route.id,
         company: route.company,
         price: route.price,
         currency: route.currency,
+        travelDate: route.date,
+        departureTime: route.departureTime,
+        arrivalTime: route.arrivalTime,
+        duration: route.duration,
         status: "pending",
-        payment: "Pending",
       });
-      navigate("/payment", { state: { route, passenger: formData } });
+      navigate("/payment", { state: { route, passenger: formData, booking: saved } });
     } catch (error) {
       console.error("Unable to save booking:", error);
       setSaveError("We could not save this booking. Please try again.");

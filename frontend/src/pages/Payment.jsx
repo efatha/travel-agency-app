@@ -1,29 +1,37 @@
 import { useEffect, useMemo, useState } from "react";
-import { addDoc, collection, getDocs } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { useLocation, useNavigate } from "react-router-dom";
 import { db } from "../firebase/firebase";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { recordPhysicalPayment } from "../services/bookings";
 
-const RECEIVING_ACCOUNT = "Agency Receiving Account: keep this in an admin-only Firestore document or secure environment variable.";
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_bJe4gy6mogE4bEY7O297G00";
+const PHYSICAL_METHODS = ["Cash", "MTN Mobile Money", "Airtel Money"];
 
 function Payment() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const route = state?.route;
   const passenger = state?.passenger;
+  const booking = state?.booking;
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("Stripe Card Payment");
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [transactionRef, setTransactionRef] = useState("");
+  const [receivedBy, setReceivedBy] = useState("");
+  const [amountReceived, setAmountReceived] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [receipt, setReceipt] = useState(null);
+  const [paymentDate, setPaymentDate] = useState("");
 
+  const seats = Number(booking?.seats || passenger?.seats || 1);
+  const unitPrice = Number(route?.price || 0);
+  const amountDue = booking?.amountDue ?? unitPrice * seats;
   const amount = useMemo(() => {
-    if (!route?.price) return "N/A";
-    return `${route.currency || ""} ${route.price}`.trim();
-  }, [route]);
+    if (!route?.price && amountDue == null) return "N/A";
+    return `${route?.currency || booking?.currency || ""} ${amountDue}`.trim();
+  }, [route, booking, amountDue]);
 
   useEffect(() => {
     if (route) {
@@ -77,7 +85,7 @@ function Payment() {
 
     try {
       const generatedReceipt = {
-        bookingId: `EA${Date.now().toString().slice(-6)}`,
+        bookingId: booking?.bookingRef || booking?.id || "Unlinked",
         customerName: passenger.fullName,
         phoneNumber: passenger.phoneNumber || "N/A",
         route: `${route.from} → ${route.to}`,
@@ -86,24 +94,10 @@ function Payment() {
         paymentMethod: "Stripe Card Payment",
         transactionRef: "Stripe checkout initiated",
         status: "Pending Stripe confirmation",
-        receivingAccount: RECEIVING_ACCOUNT,
         paidAt: new Date().toLocaleString(),
       };
 
-      await addDoc(collection(db, "payments"), {
-        bookingId: generatedReceipt.bookingId,
-        customerName: generatedReceipt.customerName,
-        phoneNumber: generatedReceipt.phoneNumber,
-        route: generatedReceipt.route,
-        company: generatedReceipt.company,
-        amount: generatedReceipt.amount,
-        method: generatedReceipt.paymentMethod,
-        transactionId: generatedReceipt.transactionRef,
-        status: generatedReceipt.status,
-        paidAt: new Date().toISOString(),
-      });
-
-      setStatusMessage("Redirecting you to the secure Stripe checkout page...");
+      setStatusMessage("Redirecting you to the Stripe test page. This does not record the fare as received.");
       window.open(getStripeCheckoutUrl(), "_blank", "noopener,noreferrer");
       setReceipt(generatedReceipt);
     } catch (error) {
@@ -120,8 +114,9 @@ function Payment() {
       return;
     }
 
-    if (!isStripePayment && !transactionRef.trim()) {
-      setStatusMessage("Please complete the transaction details before paying.");
+    const isPhysical = PHYSICAL_METHODS.includes(paymentMethod);
+    if (isPhysical && (!transactionRef.trim() || !receivedBy.trim() || !amountReceived)) {
+      setStatusMessage("Enter the amount received, the receipt reference, and who received the money.");
       return;
     }
 
@@ -131,62 +126,100 @@ function Payment() {
     }
 
     try {
-      const generatedReceipt = {
-        bookingId: `EA${Date.now().toString().slice(-6)}`,
+      const paymentId = await recordPhysicalPayment({
+        bookingId: booking?.id,
+        bookingRef: booking?.bookingRef,
+        customerName: passenger.fullName,
+        phoneNumber: passenger.phoneNumber,
+        route: `${route.from} → ${route.to}`,
+        routeId: route.id,
+        company: route.company,
+        seats,
+        currency: route.currency || booking?.currency,
+        amountDue,
+        amountReceived,
+        method: paymentMethod,
+        transactionRef,
+        receivedBy,
+      });
+
+      setReceipt({
+        bookingId: booking?.bookingRef || booking?.id || "Unlinked",
+        paymentId,
         customerName: passenger.fullName,
         phoneNumber: passenger.phoneNumber || "N/A",
         route: `${route.from} → ${route.to}`,
         company: route.company || "N/A",
-        amount,
+        amount: `${route.currency || ""} ${amountReceived}`.trim(),
+        amountDue: amount,
         paymentMethod,
         transactionRef,
-        status: "Paid",
-        receivingAccount: RECEIVING_ACCOUNT,
+        receivedBy,
+        status: "Recorded",
         paidAt: new Date().toLocaleString(),
-      };
-
-      await addDoc(collection(db, "payments"), {
-        bookingId: generatedReceipt.bookingId,
-        customerName: generatedReceipt.customerName,
-        phoneNumber: generatedReceipt.phoneNumber,
-        route: generatedReceipt.route,
-        company: generatedReceipt.company,
-        amount: generatedReceipt.amount,
-        method: generatedReceipt.paymentMethod,
-        transactionId: generatedReceipt.transactionRef,
-        status: "Paid",
-        paidAt: new Date().toISOString(),
       });
-
-      setReceipt(generatedReceipt);
-      setStatusMessage("Payment successful. Your receipt is ready below.");
+      setStatusMessage("Physical payment recorded and linked to this booking.");
     } catch (error) {
       console.error("Unable to save payment:", error);
       setStatusMessage("Payment could not be completed right now. Please try again.");
     }
   };
 
+  const paymentDay = (payment) => {
+    const raw = payment.paidAt;
+    const date = raw?.toDate
+      ? raw.toDate()
+      : raw?.seconds
+        ? new Date(raw.seconds * 1000)
+        : raw
+          ? new Date(raw)
+          : null;
+    if (!date || Number.isNaN(date.getTime())) return "";
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${date.getFullYear()}-${month}-${day}`;
+  };
+
+  const visiblePayments = paymentDate
+    ? payments.filter((payment) => paymentDay(payment) === paymentDate)
+    : payments;
+
   if (!route) {
     return (
       <main className="page-shell">
         <h1>Payments</h1>
-        <p className="helper-text">Review payment records and recent transaction activity.</p>
+        <p className="helper-text">Search recorded payments by the day they were taken.</p>
+        <label className="payment-date-search">
+          Date
+          <input
+            type="date"
+            value={paymentDate}
+            onChange={(event) => setPaymentDate(event.target.value)}
+          />
+          {paymentDate && (
+            <button type="button" onClick={() => setPaymentDate("")}>Clear</button>
+          )}
+        </label>
 
         {loading ? (
           <p>Loading payments...</p>
-        ) : payments.length > 0 ? (
-          payments.map((payment) => (
-            <section key={payment.id} className="panel payment-card" aria-label="Payment record">
-              <p><strong>Booking:</strong> {payment.bookingId || payment.booking || "N/A"}</p>
-              <p><strong>Amount:</strong> {payment.amount || payment.price || "N/A"}</p>
-              <p><strong>Method:</strong> {payment.method || payment.paymentMethod || "N/A"}</p>
-              <p><strong>Status:</strong> {payment.status || "Pending"}</p>
-              <p><strong>Transaction:</strong> {payment.transactionId || payment.transaction || "N/A"}</p>
-            </section>
-          ))
+        ) : visiblePayments.length > 0 ? (
+          <div className={visiblePayments.length > 1 ? "payment-grid" : "payment-list"}>
+            {visiblePayments.map((payment) => (
+              <section key={payment.id} className="panel payment-card" aria-label="Payment record">
+                <p><strong>Booking:</strong> {payment.bookingRef || payment.bookingId || "N/A"}</p>
+                <p><strong>Date:</strong> {paymentDay(payment) || "N/A"}</p>
+                <p><strong>Amount:</strong> {payment.amountReceived ?? payment.amount ?? payment.price ?? "N/A"} {payment.currency || ""}</p>
+                <p><strong>Method:</strong> {payment.method || payment.paymentMethod || "N/A"}</p>
+                <p><strong>Status:</strong> {payment.status || "Pending"}</p>
+                <p><strong>Receipt:</strong> {payment.transactionRef || payment.transactionId || "N/A"}</p>
+                <p><strong>Received by:</strong> {payment.receivedBy || "N/A"}</p>
+              </section>
+            ))}
+          </div>
         ) : (
           <section className="panel">
-            <p>No payments found in Firestore yet.</p>
+            <p>{paymentDate ? "No payments recorded on that date." : "No payments found in Firestore yet."}</p>
           </section>
         )}
 
@@ -237,34 +270,47 @@ function Payment() {
           <input id="customerName" type="text" value={passenger?.fullName || ""} readOnly />
 
           {isStripePayment ? (
-            <>
-              <p className="helper-text">
-                Secure checkout is connected to the Stripe test payment link for this trip. A new tab will open with the booking details attached to the payment link.
-              </p>
-              <p className="helper-text">
-                Route: {route.from} → {route.to} · Amount: {amount} · Company: {route.company || "N/A"}
-              </p>
-            </>
+            <p className="helper-text">
+              Stripe test checkout does not record this fare as received. Use Cash, MTN, or Airtel to save a physical payment against booking {booking?.bookingRef || "this trip"}.
+            </p>
           ) : (
             <>
-              <label htmlFor="transactionRef">Transaction Reference</label>
+              <label htmlFor="amountReceived">Amount received</label>
+              <input
+                id="amountReceived"
+                type="number"
+                min="0"
+                placeholder={String(amountDue || "")}
+                value={amountReceived}
+                onChange={(event) => setAmountReceived(event.target.value)}
+                required
+              />
+              <label htmlFor="transactionRef">Receipt reference</label>
               <input
                 id="transactionRef"
                 type="text"
-                placeholder="Enter transaction reference"
+                placeholder="Cash receipt or mobile-money message code"
                 value={transactionRef}
                 onChange={(event) => setTransactionRef(event.target.value)}
-                aria-describedby="transactionHint"
                 required
               />
-              <p id="transactionHint" className="helper-text">Enter the reference code shown on your mobile money or card confirmation.</p>
+              <label htmlFor="receivedBy">Received by</label>
+              <input
+                id="receivedBy"
+                type="text"
+                placeholder="Staff name"
+                value={receivedBy}
+                onChange={(event) => setReceivedBy(event.target.value)}
+                required
+              />
+              <p className="helper-text">
+                Booking {booking?.bookingRef || "not linked"} · {seats} seat{seats > 1 ? "s" : ""} · due {amount}. This saves the cash or handset payment already taken. It does not move money.
+              </p>
             </>
           )}
 
-          <p className="helper-text">Confidential receiving account details are kept in the admin-only payment setup and are not shown publicly.</p>
-
           <button className="primary-btn site-btn site-btn-gold" type="submit">
-            {isStripePayment ? "Pay with Stripe" : "Pay Now"}
+            {isStripePayment ? "Open Stripe test" : "Record payment"}
           </button>
 
           {statusMessage && <p>{statusMessage}</p>}
@@ -272,16 +318,19 @@ function Payment() {
       ) : (
         <section className="panel" aria-label="Payment receipt">
           <h2>Payment Receipt</h2>
-          <p><strong>Booking ID:</strong> {receipt.bookingId}</p>
+          <p><strong>Booking:</strong> {receipt.bookingId}</p>
+          <p><strong>Payment record:</strong> {receipt.paymentId || "Not stored"}</p>
           <p><strong>Customer:</strong> {receipt.customerName}</p>
           <p><strong>Phone:</strong> {receipt.phoneNumber}</p>
           <p><strong>Route:</strong> {receipt.route}</p>
           <p><strong>Company:</strong> {receipt.company}</p>
-          <p><strong>Amount:</strong> {receipt.amount}</p>
+          <p><strong>Due:</strong> {receipt.amountDue || receipt.amount}</p>
+          <p><strong>Received:</strong> {receipt.amount}</p>
           <p><strong>Method:</strong> {receipt.paymentMethod}</p>
-          <p><strong>Transaction:</strong> {receipt.transactionRef}</p>
-          <p><strong>Paid At:</strong> {receipt.paidAt}</p>
-          <p><strong>Receiving Account:</strong> {receipt.receivingAccount}</p>
+          <p><strong>Receipt:</strong> {receipt.transactionRef}</p>
+          <p><strong>Received by:</strong> {receipt.receivedBy || "N/A"}</p>
+          <p><strong>Status:</strong> {receipt.status}</p>
+          <p><strong>Recorded at:</strong> {receipt.paidAt}</p>
 
           <button className="primary-btn site-btn site-btn-gold" type="button" onClick={() => navigate("/")}>
             Back to Home

@@ -23,13 +23,13 @@ function BookingTable({ bookings = [] }) {
             {bookings.length > 0 ? (
               bookings.map((booking, index) => (
                 <tr key={booking.id || `${booking.bookingId || "booking"}-${index}`}>
-                  <td>{booking.bookingId || `EA${String(index + 1).padStart(5, "0")}`}</td>
+                  <td>{booking.bookingRef || booking.bookingId || booking.id}</td>
                   <td>{booking.customer || booking.fullName || "Unknown"}</td>
-                  <td>{booking.phone || "+256700000000"}</td>
+                  <td>{booking.phone || booking.phoneNumber || "N/A"}</td>
                   <td>{booking.route || "N/A"}</td>
-                  <td>{booking.company || "East Africa Express"}</td>
-                  <td>{booking.status || "Confirmed"}</td>
-                  <td>{booking.payment || "Paid"}</td>
+                  <td>{booking.company || "N/A"}</td>
+                  <td>{booking.status || "pending"}</td>
+                  <td>{booking.payment || "Unpaid"}{booking.transactionRef ? ` · ${booking.transactionRef}` : ""}</td>
                   <td>
                     <div className="action-group">
                       <button className="small-btn">View</button>
