@@ -94,8 +94,15 @@ function BookingForm({ loading = false }) {
   const [toCity, setToCity] = useState("");
   const [routes, setRoutes] = useState([]);
   const [allRoutes, setAllRoutes] = useState([]);
-  const availableCities = [...new Set(
-    allRoutes.flatMap((route) => [route.from, route.to].filter(Boolean))
+  const sameCity = (left, right) =>
+    String(left || "").trim().toLowerCase() === String(right || "").trim().toLowerCase();
+  const departureCities = [...new Set(allRoutes.map((route) => route.from).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
+  const destinationCities = [...new Set(
+    allRoutes
+      .filter((route) => !fromCity || sameCity(route.from, fromCity))
+      .map((route) => route.to)
+      .filter(Boolean)
   )].sort((a, b) => a.localeCompare(b));
   const [trips, setTrips] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -132,19 +139,10 @@ function BookingForm({ loading = false }) {
     setRoutes([]);
 
     try {
-      const { matches, routes: allRoutes } = await findRoutes(fromCity, toCity);
-
+      const { matches } = await findRoutes(fromCity, toCity);
       setRoutes(matches);
-
       if (matches.length === 0) {
-        const listed = allRoutes
-          .map((route) => `${route.from} → ${route.to} (${route.currency || ""} ${route.price})`.trim())
-          .join(", ");
-        setMessage(
-          listed
-            ? `No route found from ${fromCity} to ${toCity}. Routes on file: ${listed}.`
-            : `No route found from ${fromCity} to ${toCity}.`
-        );
+        setMessage(`No ticket from ${fromCity} to ${toCity}.`);
       }
     } catch (error) {
       console.error("Error searching routes:", error);
@@ -162,15 +160,21 @@ function BookingForm({ loading = false }) {
       <CitySelect
         label="Select departure city"
         value={fromCity}
-        cities={availableCities}
+        cities={departureCities}
         trips={trips}
         disabled={loading || searching}
-        onChange={setFromCity}
+        onChange={(city) => {
+          setFromCity(city);
+          setToCity("");
+          setHasSearched(false);
+          setRoutes([]);
+          setMessage("");
+        }}
       />
       <CitySelect
         label="Select destination city"
         value={toCity}
-        cities={availableCities}
+        cities={destinationCities}
         trips={trips}
         disabled={loading || searching}
         onChange={setToCity}
