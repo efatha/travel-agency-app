@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { addDoc, collection, getDocs } from "firebase/firestore";
 import { useLocation, useNavigate } from "react-router-dom";
 import { db } from "../firebase/firebase";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const RECEIVING_ACCOUNT = "Agency Receiving Account: keep this in an admin-only Firestore document or secure environment variable.";
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_bJe4gy6mogE4bEY7O297G00";
@@ -196,7 +198,10 @@ function Payment() {
   }
 
   return (
+    <div className="site">
+      <Navbar />
     <main className="booking-page" aria-labelledby="payment-heading">
+      <p className="site-eyebrow site-eyebrow-ink">Settle the journey</p>
       <h1 id="payment-heading">Payment</h1>
       <p className="helper-text">
         Complete your payment securely for {route.from} → {route.to}.
@@ -258,7 +263,7 @@ function Payment() {
 
           <p className="helper-text">Confidential receiving account details are kept in the admin-only payment setup and are not shown publicly.</p>
 
-          <button className="primary-btn" type="submit">
+          <button className="primary-btn site-btn site-btn-gold" type="submit">
             {isStripePayment ? "Pay with Stripe" : "Pay Now"}
           </button>
 
@@ -278,12 +283,14 @@ function Payment() {
           <p><strong>Paid At:</strong> {receipt.paidAt}</p>
           <p><strong>Receiving Account:</strong> {receipt.receivingAccount}</p>
 
-          <button className="primary-btn" type="button" onClick={() => navigate("/")}>
+          <button className="primary-btn site-btn site-btn-gold" type="button" onClick={() => navigate("/")}>
             Back to Home
           </button>
         </section>
       )}
     </main>
+      <Footer variant="site" />
+    </div>
   );
 }
 

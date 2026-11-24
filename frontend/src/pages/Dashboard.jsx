@@ -6,6 +6,7 @@ import RecentBookings from "../components/RecentBookings";
 import PopularRoutes from "../components/PopularRoutes";
 import Footer from "../components/Footer";
 import { db } from "../firebase/firebase";
+import { getJourneys } from "../services/trips";
 
 function formatRevenue(value) {
   return new Intl.NumberFormat("en-UG", {
@@ -36,8 +37,9 @@ function Dashboard() {
         const customers = customerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         const payments = paymentSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-        const routeFrequency = routes.reduce((accumulator, route) => {
-          const key = `${route.from || "Unknown"} → ${route.to || "Unknown"}`;
+        const catalogJourneys = routes.length > 0 ? [] : getJourneys();
+        const routeFrequency = (routes.length > 0 ? routes : catalogJourneys).reduce((accumulator, route) => {
+          const key = route.title || `${route.from || "Unknown"} → ${route.to || "Unknown"}`;
           accumulator[key] = (accumulator[key] || 0) + 1;
           return accumulator;
         }, {});
@@ -56,7 +58,7 @@ function Dashboard() {
         }));
 
         setSummary({
-          routes: routes.length,
+          routes: routes.length || catalogJourneys.length,
           bookings: bookings.length,
           customers: customers.length,
           revenue: formatRevenue(revenue),
@@ -71,6 +73,17 @@ function Dashboard() {
         );
       } catch (error) {
         console.error("Dashboard data load error:", error);
+        const catalogJourneys = getJourneys();
+        setSummary((current) => ({
+          ...current,
+          routes: catalogJourneys.length,
+        }));
+        setPopularRoutes(
+          catalogJourneys.slice(0, 3).map((journey) => ({
+            label: journey.title,
+            count: 1,
+          }))
+        );
       } finally {
         setLoading(false);
       }

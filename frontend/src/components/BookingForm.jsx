@@ -1,7 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase/firebase";
+import { loadRoutes, loadTrips, searchRoutes as findRoutes } from "../services/trips";
+
+function RouteCard({ route, onBook }) {
+  return (
+    <div className="route-card">
+      <h3>
+        {route.from} → {route.to}
+      </h3>
+      <p><strong>Company:</strong> {route.company || "N/A"}</p>
+      <p><strong>Date:</strong> {route.date || "N/A"}</p>
+      <p><strong>Departure:</strong> {route.departureTime || "N/A"}</p>
+      <p><strong>Arrival:</strong> {route.arrivalTime || "N/A"}</p>
+      <p><strong>Duration:</strong> {route.duration || "N/A"}</p>
+      <p><strong>Available Seats:</strong> {route.availableSeats ?? "N/A"}</p>
+      <p><strong>Price:</strong> {route.price != null && route.price !== "" ? `${route.currency || ""} ${route.price}`.trim() : "N/A"}</p>
+      <button className="primary-btn" onClick={() => onBook(route)}>
+        Book Now
+      </button>
+    </div>
+  );
+}
 
 function BookingForm({ cities = [], loading = false }) {
   const availableCities = cities;
@@ -9,11 +28,28 @@ function BookingForm({ cities = [], loading = false }) {
   const [fromCity, setFromCity] = useState("");
   const [toCity, setToCity] = useState("");
   const [routes, setRoutes] = useState([]);
+  const [allRoutes, setAllRoutes] = useState([]);
+  const [trips, setTrips] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [message, setMessage] = useState("");
 
-  const normalizeValue = (value) =>
-    typeof value === "string" ? value.trim().toLowerCase() : "";
+  useEffect(() => {
+    let active = true;
+    Promise.all([loadRoutes(), loadTrips()])
+      .then(([routeRows, tripRows]) => {
+        if (!active) return;
+        setAllRoutes(routeRows);
+        setTrips(tripRows);
+      })
+      .catch((error) => {
+        console.error("Error loading Firestore routes:", error);
+        if (active) setMessage("Unable to fetch routes from Firestore right now.");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const searchRoutes = async () => {
     if (!fromCity || !toCity) {
@@ -23,24 +59,24 @@ function BookingForm({ cities = [], loading = false }) {
     }
 
     setSearching(true);
+    setHasSearched(true);
     setMessage("");
     setRoutes([]);
 
     try {
-      const snapshot = await getDocs(collection(db, "routes"));
-      const results = snapshot.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((route) => {
-          return (
-            normalizeValue(route.from) === normalizeValue(fromCity) &&
-            normalizeValue(route.to) === normalizeValue(toCity)
-          );
-        });
+      const { matches, routes: allRoutes } = await findRoutes(fromCity, toCity);
 
-      setRoutes(results);
+      setRoutes(matches);
 
-      if (results.length === 0) {
-        setMessage(`No route found from ${fromCity} to ${toCity}.`);
+      if (matches.length === 0) {
+        const listed = allRoutes
+          .map((route) => `${route.from} → ${route.to} (${route.currency || ""} ${route.price})`.trim())
+          .join(", ");
+        setMessage(
+          listed
+            ? `No route found from ${fromCity} to ${toCity}. Routes on file: ${listed}.`
+            : `No route found from ${fromCity} to ${toCity}.`
+        );
       }
     } catch (error) {
       console.error("Error searching routes:", error);
@@ -52,8 +88,9 @@ function BookingForm({ cities = [], loading = false }) {
 
   return (
     <div className="booking">
-      <h2>Find Your Trip</h2>
-
+      <h2>Find your trip</h2>
+      <p className="booking-lead">Departure, destination, then the seats still open.</p>
+      <div className="booking-fields">
       <select
         disabled={loading || searching}
         value={fromCity}
@@ -95,30 +132,31 @@ function BookingForm({ cities = [], loading = false }) {
       <button onClick={searchRoutes} disabled={loading || searching}>
         {searching ? "Searching..." : loading ? "Loading..." : "Search"}
       </button>
+      </div>
 
-      <div style={{ marginTop: "1rem" }}>
+      {trips.length > 0 && (
+        <div className="trip-towns">
+          {trips.map((trip) => (
+            <p key={trip.id}>
+              <strong>{trip.city}</strong>
+              {trip.country ? ` · ${trip.country}` : ""}
+            </p>
+          ))}
+        </div>
+      )}
+
+      <div className="booking-results">
         {searching ? (
           <p>Searching routes...</p>
-        ) : routes.length > 0 ? (
+        ) : hasSearched && routes.length > 0 ? (
           routes.map((route) => (
-            <div key={route.id} className="route-card">
-              <h3>
-                {route.from} → {route.to}
-              </h3>
-              <p><strong>Company:</strong> {route.company || "N/A"}</p>
-              <p><strong>Date:</strong> {route.date || "N/A"}</p>
-              <p><strong>Departure:</strong> {route.departureTime || "N/A"}</p>
-              <p><strong>Arrival:</strong> {route.arrivalTime || "N/A"}</p>
-              <p><strong>Duration:</strong> {route.duration || "N/A"}</p>
-              <p><strong>Available Seats:</strong> {route.availableSeats ?? "N/A"}</p>
-              <p><strong>Price:</strong> {route.price ? `${route.currency || ""} ${route.price}`.trim() : "N/A"}</p>
-              <button
-                className="primary-btn"
-                onClick={() => navigate("/booking", { state: { route } })}
-              >
-                Book Now
-              </button>
-            </div>
+            <RouteCard key={route.id} route={route} onBook={(selected) => navigate("/booking", { state: { route: selected } })} />
+          ))
+        ) : hasSearched ? (
+          message && <p>{message}</p>
+        ) : allRoutes.length > 0 ? (
+          allRoutes.map((route) => (
+            <RouteCard key={route.id} route={route} onBook={(selected) => navigate("/booking", { state: { route: selected } })} />
           ))
         ) : (
           message && <p>{message}</p>

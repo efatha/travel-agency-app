@@ -1,4 +1,14 @@
+import { getJourneys } from "../services/trips";
+
 function PopularRoutes({ routes = [] }) {
+  const visibleRoutes =
+    routes.length > 0
+      ? routes
+      : getJourneys().map((journey) => ({
+          label: journey.title || `${journey.from} → ${journey.to}`,
+          count: 1,
+        }));
+
   return (
     <section className="panel">
       <div className="panel-header">
@@ -6,8 +16,8 @@ function PopularRoutes({ routes = [] }) {
       </div>
 
       <div className="chart-list">
-        {routes.length > 0 ? (
-          routes.map((route) => (
+        {visibleRoutes.length > 0 ? (
+          visibleRoutes.map((route) => (
             <div key={route.label} className="chart-row">
               <span>{route.label}</span>
               <div className="bar-track">

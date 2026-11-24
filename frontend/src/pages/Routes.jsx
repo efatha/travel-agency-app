@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { addDoc, collection } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { addDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebase";
+import { getJourneys } from "../services/trips";
 
 function RoutesPage() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,23 @@ function RoutesPage() {
     currency: "UGX",
   });
   const [message, setMessage] = useState("");
+  const [storedRoutes, setStoredRoutes] = useState(null);
+
+  useEffect(() => {
+    async function loadRoutes() {
+      try {
+        const snapshot = await getDocs(collection(db, "routes"));
+        setStoredRoutes(snapshot.docs.map((docItem) => ({ id: docItem.id, ...docItem.data() })));
+      } catch (error) {
+        console.error("Unable to load routes:", error);
+        setStoredRoutes([]);
+      }
+    }
+
+    loadRoutes();
+  }, []);
+
+  const signatureJourneys = storedRoutes && storedRoutes.length === 0 ? getJourneys() : [];
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -30,6 +48,7 @@ function RoutesPage() {
         price: Number(formData.price || 0),
       });
 
+      setStoredRoutes((current) => [...(current || []), { ...formData, id: "new" }]);
       setMessage("Route added to Firestore successfully.");
       setFormData({
         from: "",
@@ -65,6 +84,26 @@ function RoutesPage() {
           <button className="primary-btn" type="submit">Add Route</button>
           {message && <p>{message}</p>}
         </form>
+        {storedRoutes && storedRoutes.length > 0 && (
+          <div>
+            <h3>Routes in Firestore</h3>
+            {storedRoutes.map((route) => (
+              <p key={route.id}>
+                {route.from} → {route.to} · {route.company} · {route.date} · {route.departureTime}–{route.arrivalTime} · {route.currency} {route.price} · seats {route.availableSeats}
+              </p>
+            ))}
+          </div>
+        )}
+        {signatureJourneys.length > 0 && (
+          <div>
+            <h3>Signature journeys</h3>
+            {signatureJourneys.map((journey) => (
+              <p key={journey.id}>
+                {journey.title}: {journey.from} → {journey.to} · {journey.days} days · from USD {journey.priceFrom}
+              </p>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

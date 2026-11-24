@@ -10,7 +10,32 @@ function CustomersPage() {
     async function fetchCustomers() {
       try {
         const snapshot = await getDocs(collection(db, "customers"));
-        setCustomers(snapshot.docs.map((docItem) => ({ id: docItem.id, ...docItem.data() })));
+        const stored = snapshot.docs.map((docItem) => ({ id: docItem.id, ...docItem.data() }));
+
+        if (stored.length > 0) {
+          setCustomers(stored);
+          return;
+        }
+
+        const bookingSnapshot = await getDocs(collection(db, "bookings"));
+        const grouped = new Map();
+        bookingSnapshot.docs.forEach((docItem) => {
+          const booking = docItem.data();
+          const name = booking.fullName || booking.customer || "";
+          if (!name) return;
+          const key = `${name}|${booking.email || ""}|${booking.phone || booking.phoneNumber || ""}`;
+          const current = grouped.get(key) || {
+            id: key,
+            fullName: name,
+            phone: booking.phone || booking.phoneNumber || "",
+            email: booking.email || "",
+            bookings: 0,
+            status: "Active",
+          };
+          current.bookings += 1;
+          grouped.set(key, current);
+        });
+        setCustomers([...grouped.values()]);
       } catch (error) {
         console.error("Unable to load customers:", error);
         setCustomers([]);
